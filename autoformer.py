@@ -6,7 +6,7 @@ from torch import Tensor, nn
 
 from layers.autocorrelation import AutoCorrelation, AutoCorrelationLayer
 from layers.decoder import Decoder, DecoderLayer
-from layers.embedding import DataEmbedding
+from layers.embedding import DataEmbedding, Frequency
 from layers.encoder import Encoder, EncoderLayer
 from layers.layer_norm import LayerNorm
 from layers.series_decomp import SeriesDecomp
@@ -17,11 +17,14 @@ from utils.types import Activation
 class AutoformerConfig:
     D_model: int  # feature dimension
     D_ff: int  # inner-feature dimension for FFNNs of encoder and decoder
-    c_autocorrelation: float  # coefficient for auto-correlation, recall that k = floor(c * log L)
+    c_autocorrelation: (
+        float
+    )  # coefficient for auto-correlation, recall that k = floor(c * log L)
     num_heads: int
     q_mva: int  # window size for moving average in series decomposition
     dropout: float  # dropout probability
     activation: Activation  # activation function for FFNNs of encoder and decoder
+    highest_freq: Frequency  # highest frequency for temporal encoding
     num_encoder_layers: int
     num_decoder_layers: int
     enc_in: int  # feature dimension of encoder

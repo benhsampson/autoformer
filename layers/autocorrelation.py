@@ -1,4 +1,5 @@
 from math import floor, log
+from typing import Optional
 
 import torch
 from torch import Tensor, nn
@@ -103,33 +104,33 @@ class AutoCorrelation(nn.Module):
 
 
 class AutoCorrelationLayer(nn.Module):
-    def __init__(self, attention: AutoCorrelation, D: int, num_heads: int):
+    def __init__(self, attention: AutoCorrelation, D_model: int, n_heads: int):
         """Thin wrapper of the AutoCorrelation class.
 
         Args:
             attention: AutoCorrelation class.
-            D: Feature dimension for the model.
-            num_heads: Number of heads.
+            D_model: Feature dimension for the model.
+            n_heads: Number of heads.
         """
         super().__init__()
 
-        dQK = D // num_heads
-        dV = D // num_heads
+        dQK = D_model // n_heads
+        dV = D_model // n_heads
 
-        self.query_projection = nn.Linear(D, dQK * num_heads)
-        self.key_projection = nn.Linear(D, dQK * num_heads)
-        self.value_projection = nn.Linear(D, dV * num_heads)
-        self.out_projection = nn.Linear(dV * num_heads, D)
+        self.query_projection = nn.Linear(D_model, dQK * n_heads)
+        self.key_projection = nn.Linear(D_model, dQK * n_heads)
+        self.value_projection = nn.Linear(D_model, dV * n_heads)
+        self.out_projection = nn.Linear(dV * n_heads, D_model)
 
         self.attention = attention
-        self.num_heads = num_heads
+        self.n_heads = n_heads
 
     def forward(
         self,
         queries: Tensor,
         keys: Tensor,
         values: Tensor,
-        attn_mask=None,
+        attn_mask: Optional[Tensor] = None,
     ) -> Tensor:
         """Forward pass of the auto-correlation layer.
 
@@ -148,7 +149,7 @@ class AutoCorrelationLayer(nn.Module):
         """
         B, L, D = queries.shape
         _, S, _ = keys.shape
-        nH = self.num_heads
+        nH = self.n_heads
 
         assert B == keys.shape[0] == values.shape[0]
         assert S == values.shape[1]

@@ -6,6 +6,7 @@ from torch import nn, optim
 
 from autoformer import Autoformer, AutoformerConfig
 from dataset.aus_antidiabetic_drug import aus_antidiabetic_drug_loaders
+from layers.embedding import Frequency
 from lstm import LSTM_TimeSeriesModel
 from train import TrainArguments, train
 
@@ -23,11 +24,6 @@ class Task(str, Enum):
     multi_predict_multi = 'M'
     uni_predict_uni = 'S'
     multi_predict_uni = 'MS'
-
-
-class HighestFrequency(str, Enum):
-    hour = 'h'
-    minute = 'm'
 
 
 class Activation(str, Enum):
@@ -59,9 +55,7 @@ def main(
     target: Annotated[
         Optional[int], typer.Option(help='Target feature (required if S or MS task)')
     ] = None,
-    highest_frequency: Annotated[
-        HighestFrequency, typer.Option()
-    ] = HighestFrequency.hour,
+    highest_freq: Annotated[Frequency, typer.Option()] = 'h',
     checkpoints_dir: Annotated[str, typer.Option()] = 'checkpoints',
     # ------------------- FORECASTING TASK ------------------- #
     len_seq: Annotated[int, typer.Option()] = 96,
@@ -121,6 +115,7 @@ def main(
                     q_mva=q_mva,
                     dropout=dropout,
                     activation=activation,
+                    highest_freq=highest_freq,
                     num_encoder_layers=enc_layers,
                     num_decoder_layers=dec_layers,
                     L_max=10000,
@@ -133,6 +128,7 @@ def main(
         }
         model_instance = model_dict[model]
         criterion_dict = {Loss.mse: nn.MSELoss()}
+        # TODO: scheduler
         optimizer_dict = {
             Optimizer.adam: optim.Adam(model_instance.parameters(), lr=learning_rate)
         }
